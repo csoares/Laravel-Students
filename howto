@@ -544,4 +544,29 @@ SHOW
 </div>
 @endsection
 
+# add some error message
+#view student create
 
+...
+@if ($errors->any())
+<div class="alert alert-danger">
+    <strong>Whoops!</strong> There were some problems with your input.<br><br>
+    <ul>
+        @foreach ($errors->all() as $error)
+        <li>{{ $error }}</li>
+        @endforeach
+    </ul>
+</div>
+@endif
+
+# add success from the controller
+
+# end of the store student
+return redirect('/students')->with('success', 'Student created successfully.');
+
+# add the view index student
+@if ($message = Session::get('success'))
+<div class="alert alert-success">
+    <p>{{ $message }}</p>
+</div>
+@endif
