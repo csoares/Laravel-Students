@@ -1,8 +1,8 @@
-laravel new airport # project name
+laravel new student # project name
 #edit the .env file with the configurations
 
 #run mysql using docker
-docker run --name mysql-airport-laravel -e MYSQL_DATABASE=airport  -e MYSQL_ROOT_PASSWORD=secret -p3306:3306 -d mysql:5.7
+docker run --name mysql-student-laravel -e MYSQL_DATABASE=student  -e MYSQL_ROOT_PASSWORD=secret -p3306:3306 -d mysql:5.7
 
 php artisan migrate
 
