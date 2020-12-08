@@ -1,10 +1,11 @@
 laravel new student # project name
-#edit the .env file with the configurations
+#edit the .env file with the correct configurations
 
-#run mysql using docker
+#run mysql using docker - only without homestead
 docker run --name mysql-student-laravel -e MYSQL_DATABASE=student  -e MYSQL_ROOT_PASSWORD=secret -p3306:3306 -d mysql:5.7
 
-php artisan migrate
+php artisan migrate # create tables for users migrations and laravel workflow
+# this commands needs to be repeated each time you create new tables and respective migrations
 
 # edit routes
 Route::get('/index', function () {
@@ -16,13 +17,12 @@ Route::get('/about', function () {
 });
 
 
-# criar um controlador teste para enviar para lá a função
+# create a controller to move logic the controller and not in the routes
 
 php artisan help make:controller
 php artisan make:controller TestController
 
 # change the controller code
-
 
 class TestController extends Controller
 {
@@ -51,14 +51,17 @@ Route::get('/about',[TestController::class, 'about']);
 return view("welcome");
 
 #show this view - and after let's create our views
-#create two folder - include and layouts
-###include its for the reusable parts of the site
+#create two folder - includes and layouts
+###includes its for the reusable parts of the site
 ###layouts its your pages.
 
 #inside includes - footer.blade.php
-<div class="container">
-    <h4>Programming Lab. Lectures</h4>
-</div>
+<footer class="page-footer font-small blue">
+    <div class="footer-copyright text-center py-3">© 2020 Copyright:
+        Programming Lab. Lectures
+    </div>
+</footer>
+
 #inside includes - header.blade.php
 <nav class="navbar navbar-expand-md navbar-light navbar-laravel">
     <div class="container">
@@ -85,6 +88,14 @@ return view("welcome");
 <html lang="en">
 
 <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+        integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+
     <title>@yield('title', 'First Laravel Page')</title>
 </head>
 
@@ -95,23 +106,66 @@ return view("welcome");
     </main>
     @include('includes.footer')
 
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
+        integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous">
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+        integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous">
+    </script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
+        integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous">
+    </script>
 </body>
 
 </html>
+
+
+# index blade
+@extends('layouts.app')
+
+@section('title')
+Laravel Programming Lab. | Index Page
+@endsection
+
+@section('content')
+<h2 class="mt-5 mb-3 text-center">Laravel Programming Lab.!</h2>
+@endsection
+
+
+# about blade
+@extends('layouts.app')
+
+@section('title')
+Laravel Programming Lab. | About Page
+@endsection
+
+@section('content')
+<h2 class="mt-5 mb-3 text-center">About!</h2>
+@endsection
+
+
+# update the controller to return this new views
+
+public function index(){
+    return view("index");
+}
+public function about(){
+    return view("about");
+}
 
 # edit the app.blade.php - everything change - master site
 <body style="background-color: blue">
 
 # model - for database
 php artisan help make:model
-
 php artisan make:model Student -mcr # migration - controller - ressource - fantastic!!
 
 # migration
 
  $table->string("firstName");
  $table->string("lastName");
- $table->string("course")->default("none");
 
 
 php artisan migrate  # apply to database
@@ -145,7 +199,8 @@ Student::all();
 
 
 # edits routes
-
+use App\Http\Controllers\StudentController;
+...
 Route::get('/students',[StudentController::class, 'index']);
 Route::get('/students/create',[StudentController::class, 'create']);
 Route::post('/students',[StudentController::class, 'store']);
@@ -351,7 +406,7 @@ class StudentController extends Controller
 
         $student->update($request->all());
 
-        return redirect('/');    }
+        return redirect('/students');    }
 
     /**
      * Remove the specified resource from storage.
@@ -363,7 +418,7 @@ class StudentController extends Controller
     {
         $student->delete();
 
-        return redirect('/');
+        return redirect('/students');
     }
 }
 
@@ -375,6 +430,8 @@ protected $fillable = ['firstName', 'lastName'];
 # add routes
 
 # 3 part
+Route::get('/',[TestController::class, 'index']);
+...
 Route::get('/students/show/{student}', [StudentController::class, 'show']);
 Route::get('/students/edit/{student}', [StudentController::class, 'edit']);
 Route::post('/students/update/{student}', [StudentController::class, 'update']);
@@ -392,7 +449,7 @@ INDEX
 <ul class="list-group">
     @forelse($students as $student)
     <li class="list-group-item">
-        <h5>{{$student->id}} - {{$student->firstName}} - {{$student->lastName}} </h5>
+        <h5>{{$student->id}} - {{$student->firstName}} - {{$student->lastName}}</h5>
         <form action="{{ url('students/destroy/'.$student->id) }}" method="POST">
             <a class="btn btn-info" href="{{ url('students/show',$student->id) }}">Show</a>
             <a class="btn btn-primary" href="{{ url('students/edit',$student->id) }}">Edit</a>
@@ -400,6 +457,7 @@ INDEX
             <button type="submit" class="btn btn-danger">Delete</button>
         </form>
     </li>
+
     @empty
     <h5 class="text-center">No Students Found!</h5>
     @endforelse
@@ -407,6 +465,7 @@ INDEX
 {!! $students->links('pagination::bootstrap-4') !!}
 
 @endsection
+
 
 
 EDIT
