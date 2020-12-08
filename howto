@@ -1,0 +1,488 @@
+laravel new airport # project name
+#edit the .env file with the configurations
+
+#run mysql using docker
+docker run --name mysql-airport-laravel -e MYSQL_DATABASE=airport  -e MYSQL_ROOT_PASSWORD=secret -p3306:3306 -d mysql:5.7
+
+php artisan migrate
+
+# edit routes
+Route::get('/index', function () {
+    return "hello index";
+});
+
+Route::get('/about', function () {
+    return "hello about";
+});
+
+
+# criar um controlador teste para enviar para lá a função
+
+php artisan help make:controller
+php artisan make:controller TestController
+
+# change the controller code
+
+
+class TestController extends Controller
+{
+    public function index(){
+        return "hello controller - index";
+	//         return view("welcome");
+    }
+
+
+    public function about(){
+        return "hello controller - about";
+    }
+}
+
+
+#edit routes to map for this controller
+
+use App\Http\Controllers\TestController;
+...
+Route::get('/index',[TestController::class, 'index']);
+Route::get('/about',[TestController::class, 'about']);
+
+# normally views are return inside the controller (gets data from db and visualize it inside a view), if no data then the view can be returned directly from routes
+
+#edit view welcome inside TestController index
+return view("welcome");
+
+#show this view - and after let's create our views
+#create two folder - include and layouts
+###include its for the reusable parts of the site
+###layouts its your pages.
+
+#inside includes - footer.blade.php
+<div class="container">
+    <h4>Programming Lab. Lectures</h4>
+</div>
+#inside includes - header.blade.php
+<nav class="navbar navbar-expand-md navbar-light navbar-laravel">
+    <div class="container">
+        <a class="navbar-brand" href="{{ url('/index') }}">
+            First Laravel
+        </a>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item">
+                    <a href="{{url('/index')}}" class="nav-link">Index</a>
+                </li>
+            </ul>
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item">
+                    <a href="{{url('/about')}}" class="nav-link">About</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+#inside layouts - app.blade.php
+<!doctype html>
+<html lang="en">
+
+<head>
+    <title>@yield('title', 'First Laravel Page')</title>
+</head>
+
+<body>
+    @include('includes.header')
+    <main class="container mt-4">
+        @yield('content')
+    </main>
+    @include('includes.footer')
+
+</body>
+
+</html>
+
+# edit the app.blade.php - everything change - master site
+<body style="background-color: blue">
+
+# model - for database
+php artisan help make:model
+
+php artisan make:model Student -mcr # migration - controller - ressource - fantastic!!
+
+# migration
+
+ $table->string("firstName");
+ $table->string("lastName");
+ $table->string("course")->default("none");
+
+
+php artisan migrate  # apply to database
+
+php artisan migrate:rollback # undo last change
+
+
+# tinker - interact to db
+
+
+php artisan tinker
+
+use \App;
+$a= new Student;
+$a->firstName="Joaquim";
+$a->lastName="Almeida";
+$a->save();
+Student::all();
+
+
+
+$b= Student::find(1);
+$b->lastName="Pinto";
+$b->save();
+Student::all();
+
+
+$c=Student::find(1);
+$c->delete();
+Student::all();
+
+
+# edits routes
+
+Route::get('/students',[StudentController::class, 'index']);
+Route::get('/students/create',[StudentController::class, 'create']);
+Route::post('/students',[StudentController::class, 'store']);
+
+# edits controller
+
+
+public function index()
+    {
+        $students = Student::all();
+        return view('student.index', ['students' => $students]);
+    }
+
+
+
+ public function create()
+    {
+        return view('student.create');
+    }
+
+
+
+public function store(Request $request)
+    {
+        $student = new Student;
+        $student->firstName = $request->firstName;
+        $student->lastName = $request->lastName;
+        $student->save();
+        return redirect('/students');
+    }
+
+
+
+# create blades - inside a student folder
+
+INDEX
+
+@extends('layouts.app')
+
+@section('content')
+<ul class="list-group">
+    @forelse($students as $student)
+    <li class="list-group-item">
+        <h5>{{$student->id}} - {{$student->firstName}} - {{$student->lastName}}</h5>
+    </li>
+    @empty
+    <h5 class="text-center">No Students Found!</h5>
+    @endforelse
+</ul>
+@endsection
+
+
+CREATE
+
+@extends('layouts.app')
+@section('content')
+<form action="{{url('/students')}}" method="post">
+    @csrf {{-- <- Required for protection or the form is rejected --}}
+    First Name: <input type="text" name="firstName" value="{{old('firstName')}}">
+    Last Name: <input type="text" name="lastName" value="{{old('lastName')}}">
+    <button type="submit" class="btn btn-primary">Create</button>
+</form>
+@endsection
+
+# review the header
+
+
+<nav class="navbar navbar-expand-md navbar-light navbar-laravel">
+    <div class="container">
+        <a class="navbar-brand" href="{{ url('/index') }}">
+            First Laravel
+        </a>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item">
+                    <a href="{{url('/index')}}" class="nav-link">Index</a>
+                </li>
+            </ul>
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item">
+                    <a href="{{url('/about')}}" class="nav-link">About</a>
+                </li>
+            </ul>
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item">
+                    <a href="{{url('/students/')}}" class="nav-link">Student</a>
+                </li>
+            </ul>
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item">
+                    <a href="{{url('/students/create')}}" class="nav-link">Create Student</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+
+# add pagination
+
+# inside the student index blade
+{!! $students->links('pagination::bootstrap-4') !!} # apply boostrap 4
+
+
+#inside the index controller
+public function index()
+{
+    $students = Student::paginate(2); // number of elements per page
+    return view('student.index', ['students' => $students]);
+}
+
+# let's add the other functionalities
+
+
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Student;
+use Illuminate\Http\Request;
+
+class StudentController extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function index()
+    {
+        // $students = Student::all();
+        $students = Student::paginate(2);
+        return view('student.index', ['students' => $students]);
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function create()
+    {
+        return view('student.create');
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function store(Request $request)
+    {
+        $request->validate([
+            'firstName' => 'required',
+            'lastName' => 'required',
+        ]);
+
+        // $student = new Student;
+        // $student->firstName = $request->firstName;
+        // $student->lastName = $request->lastName;
+        // $student->save();
+
+        Student::create($request->all());
+
+        return redirect('/students');    }
+
+    /**
+     * Display the specified resource.
+     *
+     * @param  \App\Models\Student  $student
+     * @return \Illuminate\Http\Response
+     */
+    public function show(Student $student)
+    {
+        return view('student.show', ['student' => $student]);
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     *
+     * @param  \App\Models\Student  $student
+     * @return \Illuminate\Http\Response
+     */
+    public function edit(Student $student)
+    {
+        return view('student.edit', ['student' => $student]);
+    }
+
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Models\Student  $student
+     * @return \Illuminate\Http\Response
+     */
+    public function update(Request $request, Student $student)
+    {
+        $request->validate([
+            'firstName' => 'required',
+            'lastName' => 'required',
+        ]);
+
+        $student->update($request->all());
+
+        return redirect('/');    }
+
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  \App\Models\Student  $student
+     * @return \Illuminate\Http\Response
+     */
+    public function destroy(Student $student)
+    {
+        $student->delete();
+
+        return redirect('/');
+    }
+}
+
+
+# add fillable to the model student - allow requests to automatically update fields
+protected $fillable = ['firstName', 'lastName'];
+
+
+# add routes
+
+# 3 part
+Route::get('/students/show/{student}', [StudentController::class, 'show']);
+Route::get('/students/edit/{student}', [StudentController::class, 'edit']);
+Route::post('/students/update/{student}', [StudentController::class, 'update']);
+Route::post('/students/destroy/{student}', [StudentController::class, 'destroy']);
+
+
+
+# add views
+INDEX
+
+
+@extends('layouts.app')
+
+@section('content')
+<ul class="list-group">
+    @forelse($students as $student)
+    <li class="list-group-item">
+        <h5>{{$student->id}} - {{$student->firstName}} - {{$student->lastName}} </h5>
+        <form action="{{ url('students/destroy/'.$student->id) }}" method="POST">
+            <a class="btn btn-info" href="{{ url('students/show',$student->id) }}">Show</a>
+            <a class="btn btn-primary" href="{{ url('students/edit',$student->id) }}">Edit</a>
+            @csrf
+            <button type="submit" class="btn btn-danger">Delete</button>
+        </form>
+    </li>
+    @empty
+    <h5 class="text-center">No Students Found!</h5>
+    @endforelse
+</ul>
+{!! $students->links('pagination::bootstrap-4') !!}
+
+@endsection
+
+
+EDIT
+
+@extends('layouts.app')
+
+@section('content')
+<div class="row">
+    <div class="col-lg-12 margin-tb">
+        <div class="pull-left">
+            <h2>Edit Airport</h2>
+        </div>
+        <div class="pull-right">
+            <a class="btn btn-primary" href="{{ url('/students') }}"> Back</a>
+        </div>
+    </div>
+</div>
+
+
+<form action="{{ url('students/update/'.$student->id) }}" method="POST">
+    @csrf
+
+    <div class="row">
+        <div class="col-xs-12 col-sm-12 col-md-12">
+            <div class="form-group">
+                <strong>First Name:</strong>
+                <input type="text" name="firstName" value="{{ $student->firstName }}" class="form-control"
+                    placeholder="First Name">
+            </div>
+        </div>
+        <div class="col-xs-12 col-sm-12 col-md-12">
+            <div class="form-group">
+                <strong>Last Name:</strong>
+                <input type="text" name="lastName" value="{{ $student->lastName }}" class="form-control"
+                    placeholder="Last Name">
+            </div>
+        </div>
+        <div class="col-xs-12 col-sm-12 col-md-12 text-center">
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </div>
+    </div>
+
+</form>
+@endsection
+
+
+SHOW
+@extends('layouts.app')
+
+@section('content')
+<div class="row">
+    <div class="col-lg-12 margin-tb">
+        <div class="pull-left">
+            <h2> Show Student</h2>
+        </div>
+        <div class="pull-right">
+            <a class="btn btn-primary" href="{{ url('/students') }}"> Back</a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-xs-12 col-sm-12 col-md-12">
+        <div class="form-group">
+            <strong>First Name:</strong>
+            {{ $student->firstName }}
+        </div>
+    </div>
+    <div class="col-xs-12 col-sm-12 col-md-12">
+        <div class="form-group">
+            <strong>Last Name:</strong>
+            {{ $student->lastName }}
+        </div>
+    </div>
+
+</div>
+@endsection
+
+
