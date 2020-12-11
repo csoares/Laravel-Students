@@ -1,6 +1,13 @@
 @extends('layouts.app')
 
 @section('content')
+
+@if ($message = Session::get('success'))
+<div class="alert alert-success">
+    <p>{{ $message }}</p>
+</div>
+@endif
+
 <ul class="list-group">
     @forelse($students as $student)
     <li class="list-group-item">

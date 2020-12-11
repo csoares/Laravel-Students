@@ -49,7 +49,7 @@ class StudentController extends Controller
 
         Student::create($request->all());
 
-        return redirect('/students');    }
+        return redirect('/students')->with('success', 'Student created successfully.');    }
 
     /**
      * Display the specified resource.

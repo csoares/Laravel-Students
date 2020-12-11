@@ -28,6 +28,8 @@ use App\Http\Controllers\StudentController;
 // Route::get('/about', function () {
 //     return "hello about";
 // });
+
+
 Route::get('/',[TestController::class, 'index']);
 
 Route::get('/index',[TestController::class, 'index']);
